@@ -44,7 +44,10 @@ const mod = vm({
   }
 })
 
-await mod.resolve('script')
+const m = await mod.resolve('script')
+
+// Run the plugin function
+m.namespace.default.helper()
 ```
 
 ```js
