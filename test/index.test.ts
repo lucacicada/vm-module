@@ -39,8 +39,9 @@ it('should work create a module context', async () => {
     ],
   })
 
-  await mod.resolve('test')
-  const res = await mod.call('test', 'default')
+  const module: any = await mod.resolve('test')
+
+  const res = await module.namespace.default()
 
   expect(res).toBe('hello')
 })
