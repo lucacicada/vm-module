@@ -3,6 +3,10 @@
   "type": "module",
   "version": "0.0.0",
   "packageManager": "pnpm@10.7.0",
+  "author": "Luca <git@lucacicada.me>",
+  "license": "MIT",
+  "repository": "https://github.com/lucacicada/vm-module",
+  "sideEffects": false,
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
