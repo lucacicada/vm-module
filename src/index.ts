@@ -1,5 +1,5 @@
-import type { Module, ModuleLinker } from 'node:vm'
-import { SyntheticModule } from 'node:vm'
+import type { ModuleLinker } from 'node:vm'
+import { Module, SyntheticModule } from 'node:vm'
 
 export type {
   Module,
@@ -48,12 +48,7 @@ export interface ImportDefinition {
   exports: Record<string, unknown>
 }
 
-export interface EntryDefinition {
-  name: string
-  setup: () => Module | Promise<Module>
-}
-
-export type EntryResolver = (id: string) => Module | Promise<Module>
+export type ModuleResolver = (id: string) => Module | Promise<Module>
 
 export interface CreatePluginContextOptions {
   /**
@@ -89,7 +84,7 @@ export interface CreatePluginContextOptions {
    * Named entry points, not available for import.
    * Useful for creating plugins or a single entry to run a script.
    */
-  modules?: EntryResolver | EntryDefinition[]
+  modules?: ModuleResolver | Module[] | Record<string, Module>
 }
 
 /**
@@ -115,25 +110,19 @@ export interface CreatePluginContextOptions {
  *       },
  *     },
  *   ],
- *   modules: [
- *     {
- *       name: 'test',
- *       setup() {
- *         return new SourceTextModule(`
- *           import { log } from 'lib';
- *           export default () => {
- *            log('hello world!')
- *           }
- *         `, {
- *           context,
- *         })
- *       },
- *     },
- *   ],
+ *   modules: {
+ *     test: new SourceTextModule(`
+ *       import lib from 'lib';
+ *       export default () => {
+ *         return lib.hello();
+ *       }
+ *     `, {
+ *       context,
+ *     }),
+ *   },
  * })
  *
  * await mod.resolve('test')
- * const res = await mod.call('test', 'default')
  * ```
  */
 export interface VmModule {
@@ -174,25 +163,19 @@ export interface VmModule {
  *       },
  *     },
  *   ],
- *   modules: [
- *     {
- *       name: 'test',
- *       setup() {
- *         return new SourceTextModule(`
- *           import { log } from 'lib';
- *           export default () => {
- *            log('hello world!')
- *           }
- *         `, {
- *           context,
- *         })
- *       },
- *     },
- *   ],
+ *   modules: {
+ *     test: new SourceTextModule(`
+ *       import lib from 'lib';
+ *       export default () => {
+ *         return lib.hello();
+ *       }
+ *     `, {
+ *       context,
+ *     }),
+ *   },
  * })
  *
  * await mod.resolve('test')
- * const res = await mod.call('test', 'default')
  * ```
  */
 export function vm(options?: CreatePluginContextOptions): VmModule {
@@ -269,12 +252,18 @@ export function vm(options?: CreatePluginContextOptions): VmModule {
     if (typeof modules === 'function') {
       module = await modules(id)
     }
-    else if (modules) {
-      const namedModule = modules.find(m => m.name === id)
+    else if (modules instanceof Module) {
+      module = modules
+    }
+    else if (Array.isArray(modules)) {
+      const namedModule = modules.find(m => m instanceof Module && m.identifier === id)
 
       if (namedModule) {
-        module = await namedModule.setup()
+        module = namedModule
       }
+    }
+    else if (modules && typeof modules === 'object' && modules[id] instanceof Module) {
+      module = modules[id]
     }
 
     if (module) {

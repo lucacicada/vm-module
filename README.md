@@ -24,7 +24,7 @@ context.URLSearchParams = URLSearchParams
 const mod = vm({
   imports: [
     {
-      id: ['node:path', 'path']
+      id: ['node:path', 'path'],
       everythingAsDefault: true,
       exports: {
         resolve

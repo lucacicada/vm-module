@@ -22,21 +22,16 @@ it('should work create a module context', async () => {
         },
       },
     ],
-    modules: [
-      {
-        name: 'test',
-        setup() {
-          return new SourceTextModule(`
-            import lib from 'lib';
-            export default () => {
-              return lib.hello();
-            }
-          `, {
-            context,
-          })
-        },
-      },
-    ],
+    modules: {
+      test: new SourceTextModule(`
+          import lib from 'lib';
+          export default () => {
+            return lib.hello();
+          }
+        `, {
+        context,
+      }),
+    },
   })
 
   const module: any = await mod.resolve('test')
